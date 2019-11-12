@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://cdn.bootcss.com/axios/0.19.0/axios.js"></script>
+  </head>
+  <body>
+    <input type="file">
+    <script>
+    async function onChange (e) {
+      console.log('e', e)
+      const formData = new FormData()
+      formData.append('a', '1')
+      formData.append('b', '2')
+      formData.append('c', '3')
+      formData.append('file', e.target.files[0])
+      console.log('formData', formData)
+      const res = await axios({
+        method: 'post',
+        url: 'http://127.0.0.1:3000/upload',
+        data: formData
+      })
+      console.log('res', res)
+    }
+
+    document.querySelector('input').addEventListener('change', onChange)
+    </script>
+  </body>
+</html>
