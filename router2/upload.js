@@ -93,6 +93,7 @@ module.exports = async (ctx, next) => {
   // await containerURL.create(aborter) // 创建容器
   const uploadStreamToBlockBlob = await uploadStream(aborter, containerURL, localFilePath) // 上传本地文件到容器
   const uploadFileToBlockBlob = await uploadLocalFile(aborter, containerURL, localFilePath) // 上传本地文件到容器
+  // 手动拼接路径。待续...
 
   ctx.body = {
     hello: 'upload2',
