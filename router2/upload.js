@@ -3,12 +3,18 @@
 // 工具：https://github.com/Azure/azure-storage-node
 // 案例：https://github.com/Azure-Samples/storage-blobs-node-quickstart
 // `.env`文件很重要，`.env`文件中的内容如下。
-// AZURE_STORAGE_ACCOUNT_NAME=你的账号
-// AZURE_STORAGE_ACCOUNT_ACCESS_KEY=你的秘钥
-// innisfree的账号：apcsocialsalesproddata
-// innisfree的秘钥：我也不知道
+// AZURE_STORAGE_ACCOUNT_NAME=某某的账号
+// AZURE_STORAGE_ACCOUNT_ACCESS_KEY=某某的秘钥
+// 某某的账号：apcsocialsalesproddata
+// 某某的秘钥：某某才知道
+// 某某的容器：wechatgrab
 // 上传路径：`https://${STORAGE_ACCOUNT_NAME}.blob.core.chinacloudapi.cn/${encodeURIComponent(containerName)}`
+// 上传时怎么定义名称呢？待续...
 // 访问路径：`https://${STORAGE_ACCOUNT_NAME}.blob.core.chinacloudapi.cn/${encodeURIComponent(containerName)}/filename.png`
+// 访问居然是下载？待续...
+// 访问路径-案例：`https://apcsocialsalesproddata.blob.core.chinacloudapi.cn/wechatgrab/upload_230d5cfd4265e1aef7d843c0e963cc2d.png`
+// 客户端直传的话，可以使用类似七牛的方式。服务端生成token返回给客户端，官方称我所谓的token为共享访问签名(SAS)。然后客户端使用相应的jssdk配合token进行上传。
+// 如果你不担心安全问题，可以把token的过期时间设置为100年(强烈不建议)。那么客户端可直接写死token并直接使用。
 
 require('dotenv').config() // 让项目可以使用`process.env.`获取`.env`文件中的内容。
 const fs = require('fs')
