@@ -6,22 +6,22 @@
     <script src="https://cdn.bootcss.com/axios/0.19.0/axios.js"></script>
   </head>
   <body>
-    <input type="file">
+    <input type="file" multiple>
     <script>
     async function onChange (e) {
-      console.log('e', e)
       const formData = new FormData()
       formData.append('a', '1')
       formData.append('b', '2')
       formData.append('c', '3')
-      formData.append('file', e.target.files[0])
-      console.log('formData', formData)
+      formData.append('file', e.target.files[0]) // 多张图片要多个键值对，后端也是多个键值对接收，建议多次打接口。
+      for (let item of formData) console.log(item) // 读取formData中的数据，不能通过formData.a的形式获取。
+      formData.forEach((v, i, a) => console.log(v, i, a)) // 读取formData中的数据，不能通过formData.a的形式获取。
       const res = await axios({
         method: 'post',
         url: 'http://127.0.0.1:3000/upload',
         data: formData
       })
-      console.log('res', res)
+      console.log(res)
     }
 
     document.querySelector('input').addEventListener('change', onChange)

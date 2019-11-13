@@ -25,3 +25,5 @@ RELEASE_NOTE*.md
 config.js
 upload
 !upload/.gitkeep
+upload2
+!upload2/.gitkeep
