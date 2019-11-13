@@ -1,11 +1,99 @@
-module.exports = (ctx, next) => {
+// 官方文档-javascript：https://docs.azure.cn/zh-cn/storage/blobs/storage-quickstart-blobs-javascript-client-libraries-v10
+// 官方文档-nodejs：https://docs.azure.cn/zh-cn/storage/blobs/storage-quickstart-blobs-nodejs-v10
+// 工具：https://github.com/Azure/azure-storage-node
+// 案例：https://github.com/Azure-Samples/storage-blobs-node-quickstart
+// `.env`文件很重要，`.env`文件中的内容如下。
+// AZURE_STORAGE_ACCOUNT_NAME=你的账号
+// AZURE_STORAGE_ACCOUNT_ACCESS_KEY=你的秘钥
+// innisfree的账号：apcsocialsalesproddata
+// innisfree的秘钥：我也不知道
+// 上传路径：`https://${STORAGE_ACCOUNT_NAME}.blob.core.chinacloudapi.cn/${encodeURIComponent(containerName)}`
+// 访问路径：`https://${STORAGE_ACCOUNT_NAME}.blob.core.chinacloudapi.cn/${encodeURIComponent(containerName)}/filename.png`
+
+require('dotenv').config() // 让项目可以使用`process.env.`获取`.env`文件中的内容。
+const fs = require('fs')
+const path = require('path')
+const {
+  Aborter,
+  BlockBlobURL,
+  ContainerURL,
+  ServiceURL,
+  SharedKeyCredential,
+  StorageURL,
+  uploadStreamToBlockBlob,
+  uploadFileToBlockBlob
+} = require('@azure/storage-blob')
+
+async function uploadStream (aborter, containerURL, filePath) {
+  filePath = path.resolve(filePath)
+  const fileName = path.basename(filePath).replace('.md', '-stream.md')
+  const blockBlobURL = BlockBlobURL.fromContainerURL(containerURL, fileName)
+  const stream = fs.createReadStream(filePath, { highWaterMark: FOUR_MEGABYTES })
+  const uploadOptions = { bufferSize: FOUR_MEGABYTES, maxBuffers: 5 }
+  return await uploadStreamToBlockBlob(aborter, stream, blockBlobURL, uploadOptions.bufferSize, uploadOptions.maxBuffers)
+}
+
+async function uploadLocalFile (aborter, containerURL, filePath) {
+  filePath = path.resolve(filePath)
+  const fileName = path.basename(filePath)
+  const blockBlobURL = BlockBlobURL.fromContainerURL(containerURL, fileName)
+  return await uploadFileToBlockBlob(aborter, filePath, blockBlobURL)
+}
+
+async function showContainerNames (aborter, serviceURL) {
+  let response
+  let marker
+  do {
+    response = await serviceURL.listContainersSegment(aborter, marker)
+    marker = response.marker
+    for (let container of response.containerItems) {
+      console.log(` - ${container.name}`)
+    }
+  } while (marker)
+}
+
+async function showBlobNames (aborter, containerURL) {
+  let response
+  let marker
+  do {
+    response = await containerURL.listBlobFlatSegment(aborter)
+    marker = response.marker
+    for (let blob of response.segment.blobItems) {
+      console.log(` - ${blob.name}`)
+    }
+  } while (marker)
+}
+
+const STORAGE_ACCOUNT_NAME = process.env.AZURE_STORAGE_ACCOUNT_NAME
+const ACCOUNT_ACCESS_KEY = process.env.AZURE_STORAGE_ACCOUNT_ACCESS_KEY
+const ONE_MEGABYTE = 1024 * 1024
+const FOUR_MEGABYTES = 4 * ONE_MEGABYTE
+const ONE_MINUTE = 60 * 1000
+const containerName = 'wechatgrab'
+
+module.exports = async (ctx, next) => {
   const req = ctx.request
   const body = req.body // multipart/form-data 类型的普通数据
   const file = req.files.file //  multipart/form-data 类型的文件数据(文件被上传到服务器之后的数据，其中包含文件在服务端的存储路径和文件大小等)
-  return new Promise(resolve => {
-    setTimeout(() => {
-      ctx.body = { hello: 'upload2' }
-      resolve(next())
-    }, 2000)
-  })
+
+  const localFilePath = file.path
+  const credentials = new SharedKeyCredential(STORAGE_ACCOUNT_NAME, ACCOUNT_ACCESS_KEY)
+  const pipeline = StorageURL.newPipeline(credentials)
+  const serviceURL = new ServiceURL(`https://${STORAGE_ACCOUNT_NAME}.blob.core.chinacloudapi.cn`, pipeline)
+  const containerURL = ContainerURL.fromServiceURL(serviceURL, containerName)
+  const aborter = Aborter.timeout(30 * ONE_MINUTE)
+  await showContainerNames(aborter, serviceURL) // 显示容器
+  await showBlobNames(aborter, containerURL) // 显示容器中的文件
+  // await containerURL.create(aborter) // 创建容器
+  const uploadStreamToBlockBlob = await uploadStream(aborter, containerURL, localFilePath) // 上传本地文件到容器
+  const uploadFileToBlockBlob = await uploadLocalFile(aborter, containerURL, localFilePath) // 上传本地文件到容器
+
+  ctx.body = {
+    hello: 'upload2',
+    message: 'uploadStreamToBlockBlob和uploadFileToBlockBlob是azure中对应方法的响应结果',
+    result: {
+      uploadStreamToBlockBlob,
+      uploadFileToBlockBlob
+    }
+  }
 }

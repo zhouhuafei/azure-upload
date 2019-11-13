@@ -22,7 +22,7 @@ yarn-error.log*
 
 RELEASE_NOTE*.md
 
-config.js
+.env
 upload
 !upload/.gitkeep
 upload2
