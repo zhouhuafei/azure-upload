@@ -43,6 +43,7 @@ async function uploadStream (aborter, containerURL, filePath) {
 async function uploadLocalFile (aborter, containerURL, filePath) {
   filePath = path.resolve(filePath)
   const fileName = path.basename(filePath)
+  myFilename = fileName
   const blockBlobURL = BlockBlobURL.fromContainerURL(containerURL, fileName)
   return await uploadFileToBlockBlob(aborter, filePath, blockBlobURL)
 }
@@ -77,6 +78,7 @@ const ONE_MEGABYTE = 1024 * 1024
 const FOUR_MEGABYTES = 4 * ONE_MEGABYTE
 const ONE_MINUTE = 60 * 1000
 const containerName = 'wechatgrab'
+let myFilename = ''
 
 module.exports = async (ctx, next) => {
   const req = ctx.request
@@ -92,16 +94,12 @@ module.exports = async (ctx, next) => {
   await showContainerNames(aborter, serviceURL) // 显示容器
   await showBlobNames(aborter, containerURL) // 显示容器中的文件
   // await containerURL.create(aborter) // 创建容器
-  const uploadStreamToBlockBlob = await uploadStream(aborter, containerURL, localFilePath) // 上传本地文件到容器
+  // const uploadStreamToBlockBlob = await uploadStream(aborter, containerURL, localFilePath) // 上传本地文件到容器
   const uploadFileToBlockBlob = await uploadLocalFile(aborter, containerURL, localFilePath) // 上传本地文件到容器
-  // 手动拼接路径。待续...
 
   ctx.body = {
     hello: 'upload2',
-    message: 'uploadStreamToBlockBlob和uploadFileToBlockBlob是azure中对应方法的响应结果',
-    result: {
-      uploadStreamToBlockBlob,
-      uploadFileToBlockBlob
-    }
+    url: `https://${STORAGE_ACCOUNT_NAME}.blob.core.chinacloudapi.cn/${encodeURIComponent(containerName)}/${myFilename}`,
+    uploadFileToBlockBlob
   }
 }
