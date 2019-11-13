@@ -17,13 +17,13 @@ module.exports = (ctx, next) => {
       const fileData = fs.createReadStream(v.path)
       formData.append('file', fileData)
     })
-    await axios({
+    const res = await axios({
       method: 'post',
       url: 'http://127.0.0.1:3001/upload',
       headers: formData.getHeaders(), // 必不可少
       data: formData
     })
-    ctx.body = { hello: 'upload' }
+    ctx.body = res.data
     resolve(next())
   })
 }
