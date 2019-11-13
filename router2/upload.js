@@ -9,11 +9,12 @@
 // 某某的秘钥：某某才知道
 // 某某的容器：wechatgrab
 // 上传路径：`https://${STORAGE_ACCOUNT_NAME}.blob.core.chinacloudapi.cn/${encodeURIComponent(containerName)}`
-// 上传时怎么定义名称呢？待续...
+// 上传时怎么自定义名称呢？下述案例中的fromContainerURL方法内进行修改即可。
 // 访问路径：`https://${STORAGE_ACCOUNT_NAME}.blob.core.chinacloudapi.cn/${encodeURIComponent(containerName)}/filename.png`
-// 访问居然是下载？待续...
 // 访问路径-案例：`https://apcsocialsalesproddata.blob.core.chinacloudapi.cn/wechatgrab/upload_230d5cfd4265e1aef7d843c0e963cc2d.png`
+// 浏览器直接访问居然是下载？是的！因为响应的`Content-Type`是`application/octet-stream`。但是依然可给`img`和`background`使用。
 // 客户端直传的话，可以使用类似七牛的方式。服务端生成token返回给客户端，官方称我所谓的token为共享访问签名(SAS)。然后客户端使用相应的jssdk配合token进行上传。
+// 共享访问签名(SAS)是一组数据，以查询字符串的形式带在`url`后即可。数据格式为：`?se=aa&sp=bb&sv=cc&ss=xx&srt=yy&sig=zz`。
 // 如果你不担心安全问题，可以把token的过期时间设置为100年(强烈不建议)。那么客户端可直接写死token并直接使用。
 
 require('dotenv').config() // 让项目可以使用`process.env.`获取`.env`文件中的内容。
