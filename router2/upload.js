@@ -92,7 +92,7 @@ module.exports = async (ctx, next) => {
   const containerURL = ContainerURL.fromServiceURL(serviceURL, containerName)
   const aborter = Aborter.timeout(30 * ONE_MINUTE)
   await showContainerNames(aborter, serviceURL) // 显示容器
-  await showBlobNames(aborter, containerURL) // 显示容器中的文件
+  // await showBlobNames(aborter, containerURL) // 显示容器中的文件
   // await containerURL.create(aborter) // 创建容器
   // const uploadStreamToBlockBlob = await uploadStream(aborter, containerURL, localFilePath) // 上传本地文件到容器
   const uploadFileToBlockBlob = await uploadLocalFile(aborter, containerURL, localFilePath) // 上传本地文件到容器
