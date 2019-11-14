@@ -22,5 +22,14 @@ module.exports = (app) => {
     }),
     require('./upload')
   )
+  // 异步需要Promise
+  router.get('/query', (ctx, next) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        ctx.body = ctx.request.query
+        resolve(next())
+      }, 1000)
+    })
+  })
   app.use(router.routes()).use(router.allowedMethods())
 }
