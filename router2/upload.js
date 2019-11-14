@@ -43,7 +43,6 @@ async function uploadStream (aborter, containerURL, filePath) {
 async function uploadLocalFile (aborter, containerURL, filePath) {
   filePath = path.resolve(filePath)
   const fileName = path.basename(filePath)
-  myFilename = fileName
   const blockBlobURL = BlockBlobURL.fromContainerURL(containerURL, fileName)
   return await uploadFileToBlockBlob(aborter, filePath, blockBlobURL)
 }
@@ -78,28 +77,32 @@ const ONE_MEGABYTE = 1024 * 1024
 const FOUR_MEGABYTES = 4 * ONE_MEGABYTE
 const ONE_MINUTE = 60 * 1000
 const containerName = 'wechatgrab'
-let myFilename = ''
 
 module.exports = async (ctx, next) => {
   const req = ctx.request
   const body = req.body // multipart/form-data 类型的普通数据
-  const file = req.files.file //  multipart/form-data 类型的文件数据(文件被上传到服务器之后的数据，其中包含文件在服务端的存储路径和文件大小等)
-
-  const localFilePath = file.path
-  const credentials = new SharedKeyCredential(STORAGE_ACCOUNT_NAME, ACCOUNT_ACCESS_KEY)
-  const pipeline = StorageURL.newPipeline(credentials)
-  const serviceURL = new ServiceURL(`https://${STORAGE_ACCOUNT_NAME}.blob.core.chinacloudapi.cn`, pipeline)
-  const containerURL = ContainerURL.fromServiceURL(serviceURL, containerName)
-  const aborter = Aborter.timeout(30 * ONE_MINUTE)
-  await showContainerNames(aborter, serviceURL) // 显示容器
-  // await showBlobNames(aborter, containerURL) // 显示容器中的文件
-  // await containerURL.create(aborter) // 创建容器
-  // const uploadStreamToBlockBlob = await uploadStream(aborter, containerURL, localFilePath) // 上传本地文件到容器
-  const uploadFileToBlockBlob = await uploadLocalFile(aborter, containerURL, localFilePath) // 上传本地文件到容器
-
+  let file = req.files.file //  multipart/form-data 类型的文件数据(文件被上传到服务器之后的数据，其中包含文件在服务端的存储路径和文件大小等)
+  if (!file.length) file = [file]  // 单张图片上传兼容多张图片上传
+  // 从本服务器把图片上传到微软云存储。
+  const uploadFileToBlockBlob = []
+  for (let v of file) {
+    const localFilePath = v.path
+    const credentials = new SharedKeyCredential(STORAGE_ACCOUNT_NAME, ACCOUNT_ACCESS_KEY)
+    const pipeline = StorageURL.newPipeline(credentials)
+    const serviceURL = new ServiceURL(`https://${STORAGE_ACCOUNT_NAME}.blob.core.chinacloudapi.cn`, pipeline)
+    const containerURL = ContainerURL.fromServiceURL(serviceURL, containerName)
+    const aborter = Aborter.timeout(30 * ONE_MINUTE)
+    await showContainerNames(aborter, serviceURL) // 显示容器
+    // await showBlobNames(aborter, containerURL) // 显示容器中的文件
+    // await containerURL.create(aborter) // 创建容器
+    // const uploadStreamToBlockBlob = await uploadStream(aborter, containerURL, localFilePath) // 上传本地文件到容器
+    const res = await uploadLocalFile(aborter, containerURL, localFilePath) // 上传本地文件到容器
+    res.url = `https://${STORAGE_ACCOUNT_NAME}.blob.core.chinacloudapi.cn/${encodeURIComponent(containerName)}/${path.basename(localFilePath)}`
+    res.urlDesc = `url字段和urlDesc字段都是手动拼接的`
+    uploadFileToBlockBlob.push(res)
+  }
   ctx.body = {
     hello: 'upload2',
-    url: `https://${STORAGE_ACCOUNT_NAME}.blob.core.chinacloudapi.cn/${encodeURIComponent(containerName)}/${myFilename}`,
     uploadFileToBlockBlob
   }
 }

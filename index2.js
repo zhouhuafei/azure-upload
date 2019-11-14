@@ -5,23 +5,6 @@ const app = new Koa()
 const cors = require('@koa/cors')
 app.use(cors())
 
-// koa-body
-const path = require('path')
-const koaBody = require('koa-body')
-app.use(koaBody({
-  multipart: true,
-  formidable: {
-    keepExtensions: true, // 保持文件的后缀。
-    uploadDir: path.join(__dirname, 'upload2'), // 设置文件上传目录。
-    maxFileSize: 2 * 1024 * 1024, // 设置上传文件大小最大限制，默认2M。
-    onFileBegin: (name, file) => { // 文件上传前的设置。
-      // console.log('name', name)
-      // console.log('file', file)
-      // file.path = file.path.replace('upload_', 'upload-new_')
-    }
-  }
-}))
-
 // 路由
 require('./router2/index')(app)
 
