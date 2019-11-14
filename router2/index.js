@@ -22,7 +22,7 @@ module.exports = (app) => {
     }),
     require('./upload')
   )
-  // 异步需要Promise
+  // 异步需要返回Promise对象 - 手动返回Promise对象。
   router.get('/query', (ctx, next) => {
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -31,5 +31,15 @@ module.exports = (app) => {
       }, 1000)
     })
   })
+  // 异步需要返回Promise对象 - async定义的方法，默认返回Promise对象。
+  router.get(
+    '/query2',
+    async (ctx, next) => {
+      next()
+    },
+    async (ctx, next) => {
+      ctx.body = ctx.request.query
+    }
+  )
   app.use(router.routes()).use(router.allowedMethods())
 }
