@@ -40,11 +40,15 @@ async function uploadStream (aborter, containerURL, filePath) {
   return await uploadStreamToBlockBlob(aborter, stream, blockBlobURL, uploadOptions.bufferSize, uploadOptions.maxBuffers)
 }
 
-async function uploadLocalFile (aborter, containerURL, filePath) {
+async function uploadLocalFile (aborter, containerURL, filePath, type) {
   filePath = path.resolve(filePath)
   const fileName = path.basename(filePath)
   const blockBlobURL = BlockBlobURL.fromContainerURL(containerURL, fileName)
-  return await uploadFileToBlockBlob(aborter, filePath, blockBlobURL)
+  const res = await uploadFileToBlockBlob(aborter, filePath, blockBlobURL)
+  // 小程序保存视频到系统相册，Content-Type支持video/mp4格式，不支持application/octet-stream格式。若不作此设置，默认响应类型是application/octet-stream。
+  // 微软云的操作是(客户端亲测)：先打一个上传文件的接口，然后再打一个设置Content-Type的接口。所以客户端会有2条请求(加上OPTIONS请求的话共计会有4条请求)。上传文件成功返回201，设置Content-Type成功返回200。
+  await blockBlobURL.setHTTPHeaders(Aborter.none, { blobContentType: type }) // image/png video/mp4
+  return res
 }
 
 async function showContainerNames (aborter, serviceURL) {
@@ -96,7 +100,7 @@ module.exports = async (ctx, next) => {
     // await showBlobNames(aborter, containerURL) // 显示容器中的文件
     // await containerURL.create(aborter) // 创建容器
     // const uploadStreamToBlockBlob = await uploadStream(aborter, containerURL, localFilePath) // 上传本地文件到容器
-    const res = await uploadLocalFile(aborter, containerURL, localFilePath) // 上传本地文件到容器
+    const res = await uploadLocalFile(aborter, containerURL, localFilePath, v.type) // 上传本地文件到容器
     res.url = `https://${STORAGE_ACCOUNT_NAME}.blob.core.chinacloudapi.cn/${encodeURIComponent(containerName)}/${path.basename(localFilePath)}`
     res.urlDesc = `url字段和urlDesc字段都是手动拼接的`
     uploadFileToBlockBlob.push(res)
